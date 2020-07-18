@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>WSNotifier</title>
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
+    <style>
+      .header{
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+      }
+
+      .header:hover{
+        cursor: pointer
+      }
+
+      .statusIndicator{
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border-radius: 100%;
+      }
+      .statusIndicator--unconnected{
+        background-color: red;
+      }
+      .statusIndicator--connected{
+        background-color: green;
+      }
+      #config-tab input{
+        width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <div> WS Status <span id="WSStatus" class="statusIndicator statusIndicator--unconnected"></span></div>
+      <button onclick="switchTab()"><img class="parametres" src="assets/gear.png" width="20"></button>
+    </div>
+    <div>
+      <div id="chat-tab">
+        <textarea name=""  cols="30" rows="10"></textarea>
+        <input type="text" placeholder="Text">
+        <button></button>
+      </div>
+      <div id="config-tab">
+        <label for="configName">Nom</label><input type="text" placeholder="Nom envoyé au serveur" id="configName" value="">
+        <label for="configName">Serveur</label><input type="text" placeholder="ws://localhost:1880/ws/notification" id="configServer" value="">
+        <button onclick="saveConfig()">Sauvegarder</button>
+        <button onclick="switchTab()">Annuler</button>
+      </div>
+    </div>
+
+    <script>window.$ = window.jQuery = require('./assets/jQuery.js');</script>
+
+    <script>
+      
+      $("#chat-tab").hide()
+  
+      const { ipcRenderer } = require('electron')
+      ipcRenderer.on('config', (event, arg) => {
+        let data   = JSON.parse(arg)
+        $('#configName').val(data.name)
+        $('#configServer').val(data.server)
+      })
+
+      ipcRenderer.on('status', (event, arg) => {
+       if (arg) {
+        $("#WSStatus").addClass('statusIndicator--connected')
+        $("#WSStatus").removeClass('statusIndicator--unconnected')
+       } else {
+        $("#WSStatus").addClass('statusIndicator--unconnected')
+        $("#WSStatus").removeClass('statusIndicator--connected')
+       }
+      })
+  
+      function switchTab() { 
+        if ($("#chat-tab").is(':visible')) {
+          $("#chat-tab").fadeOut(200,()=>$("#config-tab").fadeIn())
+        } else {
+          $("#config-tab").fadeOut(200,()=>$("#chat-tab").fadeIn())
+        }
+      }
+      
+      function saveConfig() { 
+        ipcRenderer.send('config',JSON.stringify({
+          name: document.querySelector('#configName').value,
+          server: document.querySelector('#configServer').value
+        }))
+      }
+    </script>
+  </body>
+</html>
