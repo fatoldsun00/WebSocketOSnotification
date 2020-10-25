@@ -5,59 +5,49 @@
     <title>WSNotifier</title>
     <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
     <style>
-      .header{
+      #header,#paramServer{
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-bottom: 1rem;
       }
 
-      .header:hover{
+      #header:hover{
         cursor: pointer
       }
 
+      input{
+        width: calc(100% - 100px);
+      }
       .statusIndicator{
-        display: inline-block;
-        width: 20px;
-        height: 20px;
+        width: 2rem;
+        height: 2rem;
         border-radius: 100%;
+        -webkit-mask-image: url(./assets/bolt.svg);
+        mask-image: url(./assets/bolt.svg);
       }
       .statusIndicator--unconnected{
-        background-color: red;
+        background-color: #bb1c0f;
       }
       .statusIndicator--connected{
-        background-color: green;
+        background-color: #5ef455;
       }
-      #config-tab input{
-        width: 100%;
-      }
+
     </style>
   </head>
   <body>
-    <div class="header">
-      <div> WS Status <span id="WSStatus" class="statusIndicator statusIndicator--unconnected"></span></div>
-      <button onclick="switchTab()"><img class="parametres" src="assets/gear.png" width="20"></button>
+    <div id="header">
+      <input type="text" placeholder="ws://localhost:1880/ws/notification" id="configServer" value="">
+      <div id="WSStatus" class="statusIndicator statusIndicator--unconnected"></div>
     </div>
-    <div>
-      <div id="chat-tab">
-        <textarea name=""  cols="30" rows="10"></textarea>
-        <input type="text" placeholder="Text">
-        <button></button>
-      </div>
-      <div id="config-tab">
-        <label for="configName">Nom</label><input type="text" placeholder="Nom envoyé au serveur" id="configName" value="">
-        <label for="configName">Serveur</label><input type="text" placeholder="ws://localhost:1880/ws/notification" id="configServer" value="">
+    <div id="paramServer">
+        <input type="text" placeholder="Name" id="configName" value="">
         <button onclick="saveConfig()">Sauvegarder</button>
-        <button onclick="switchTab()">Annuler</button>
-      </div>
     </div>
 
     <script>window.$ = window.jQuery = require('./assets/jQuery.js');</script>
 
-    <script>
-      
-      $("#chat-tab").hide()
-  
+    <script>  
       const { ipcRenderer } = require('electron')
       ipcRenderer.on('config', (event, arg) => {
         let data   = JSON.parse(arg)
@@ -74,15 +64,7 @@
         $("#WSStatus").removeClass('statusIndicator--connected')
        }
       })
-  
-      function switchTab() { 
-        if ($("#chat-tab").is(':visible')) {
-          $("#chat-tab").fadeOut(200,()=>$("#config-tab").fadeIn())
-        } else {
-          $("#config-tab").fadeOut(200,()=>$("#chat-tab").fadeIn())
-        }
-      }
-      
+        
       function saveConfig() { 
         ipcRenderer.send('config',JSON.stringify({
           name: document.querySelector('#configName').value,

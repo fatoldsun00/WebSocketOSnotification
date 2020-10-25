@@ -1,0 +1,30 @@
+appId: "com.fatoldsun00.WebSocketOSnotification"
+
+asar: true
+
+publish:
+  provider: "github"
+  owner: "fatoldsun00"
+  repo: "https://github.com/fatoldsun00/WebSocketOSnotification.git"
+
+mac:
+  category: "supervision"
+
+extraResources:
+  - from: "assets/imgNotif"
+    to: "assets/imgNotif"
+    filter:
+      - "**/*"
+
+extraFiles:
+  - "config.json"
+
+nsis:
+  installerIcon: "build/icon.ico"
+  createStartMenuShortcut: true
+  oneClick: true
+
+win:
+  icon: "build/icon.ico"
+  target: "NSIS"
+  publish: ["github"]

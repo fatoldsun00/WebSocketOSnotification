@@ -1,44 +1,47 @@
 const electron = require('electron')
 const { app, BrowserWindow, Tray, Menu, ipcMain   } = electron
 const path = require('path');
-require('./notification')
 const {config} = require('./config')
+require('./notification')
+
 const ws = require('./ws')
+
+//Auto Update check
+const {autoUpdater} = require("electron-updater")
+
+app.on('ready', function()  {
+  autoUpdater.checkForUpdatesAndNotify();
+});
 
 let mainWindow = undefined
 //defaults
-let width = 350;
-let height = 250;
-
-let margin_x = 0;
-let margin_y = 0;
-
-const appFolder = path.dirname(process.execPath)
-const updateExe = path.resolve(appFolder, '..', 'Update.exe')
-const exeName = path.basename(process.execPath)
-
-//lancement au démarrage
-app.setLoginItemSettings({
-  openAtLogin: true,
-  path: updateExe,
-  args: [
-    '--processStart', `"${exeName}"`,
-    '--process-start-args', `"--hidden"`
-  ]
-})
+const width = 400;
+const height = 600;
+let screenBounds
+let x
+let y
 
 
 function createWindow () {
   app.allowRendererProcessReuse = true
   // Cree la fenetre du navigateur.
+  screenBounds = electron.screen.getPrimaryDisplay().size
+  x = screenBounds.width - width
+  y = screenBounds.height - height
+
   mainWindow = new BrowserWindow({
     width,
     height,
+    x,
+    y,
+    resizable: false,
+    useContentSize: true,
+    movable: false,
     icon: path.join(__dirname,'assets', 'iconeCo.ico'),
     webPreferences: {
       nodeIntegration: true
     },
-    frame: false,
+    thickFrame: true,
     skipTaskbar: true
   })
 
@@ -57,7 +60,6 @@ function createWindow () {
   });
 
   
-  mainWindow.hide()
   //Envoie de la config
   mainWindow.webContents.once('dom-ready', () => {
     mainWindow.webContents.send('config', JSON.stringify(config.get()))
@@ -71,16 +73,26 @@ function createWindow () {
       mainWindow.webContents.send('status', 1)
       tray.setImage(path.join(__dirname,'assets', iconNameCo))
     })
+
   });
 
   // et charger le fichier index.html de l'application.
   mainWindow.loadFile('index.html')
-  //mainWindow.webContents.openDevTools()
+
+  if (!app.isPackaged){ // return true if app is packaged (prod mode)
+    mainWindow.webContents.openDevTools()
+    /*Vuejs devtools*/
+    /*const os = require('os')
+    BrowserWindow.addDevToolsExtension(
+       path.join(os.homedir(), 'AppData\\Local\\Chromium\\User Data\\Default\\Extensions\\nhdogjmejiglipccpnnnanhbledajbpd\\5.3.3_0')
+    )*/
+  } else {
+    app.setLoginItemSettings({
+      openAtLogin: true
+    })
+  }
 }
 
-app.setLoginItemSettings({
-  openAtLogin: true
-})
 
 // Cette méthode sera appelée quant Electron aura fini
 // de s'initialiser et prêt à créer des fenêtres de navigation.
@@ -131,68 +143,7 @@ app.on('ready', () => {
     if (mainWindow.isVisible()){
       mainWindow.hide();
     } else {
-      showWindow()
+      mainWindow.show();
     }
   })
 })
-
-//Gestion de la position de la fenetre popup
-function showWindow() {
-  alignWindow();
-  mainWindow.show();
-}
-
-function alignWindow() {
-  const position = calculateWindowPosition();
-  mainWindow.setBounds({
-    width: width,
-    height: height,
-    x: position.x,
-    y: position.y
-  });
-}
-
-function calculateWindowPosition() {
-  const screenBounds = electron.screen.getPrimaryDisplay().size;
-  const trayBounds = tray.getBounds();
-
-  //where is the icon on the screen?
-  let trayPos = 4; // 1:top-left 2:top-right 3:bottom-left 4.bottom-right
-  trayPos = trayBounds.y > screenBounds.height / 2 ? trayPos : trayPos / 2;
-  trayPos = trayBounds.x > screenBounds.width / 2 ? trayPos : trayPos - 1;
-
-  let DEFAULT_MARGIN = { x: margin_x, y: margin_y };
-
-  //calculate the new window position
-  switch (trayPos) {
-    case 1: // for TOP - LEFT
-      x = Math.floor(trayBounds.x + DEFAULT_MARGIN.x + trayBounds.width / 2);
-      y = Math.floor(trayBounds.y + DEFAULT_MARGIN.y + trayBounds.height / 2);
-      break;
-
-    case 2: // for TOP - RIGHT
-      x = Math.floor(
-        trayBounds.x - width - DEFAULT_MARGIN.x + trayBounds.width / 2
-      );
-      y = Math.floor(trayBounds.y + DEFAULT_MARGIN.y + trayBounds.height / 2);
-      break;
-
-    case 3: // for BOTTOM - LEFT
-      x = Math.floor(trayBounds.x + DEFAULT_MARGIN.x + trayBounds.width / 2);
-      y = Math.floor(
-        trayBounds.y - height - DEFAULT_MARGIN.y + trayBounds.height / 2
-      );
-      break;
-
-    case 4: // for BOTTOM - RIGHT
-      x = Math.floor(
-        trayBounds.x - width - DEFAULT_MARGIN.x + trayBounds.width / 2
-      );
-      y = Math.floor(
-        trayBounds.y - height - DEFAULT_MARGIN.y + trayBounds.height / 2
-      );
-      break;
-  }
-
-  return { x: x, y: y };
-}

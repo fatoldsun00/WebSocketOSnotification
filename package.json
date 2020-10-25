@@ -1,9 +1,10 @@
 {
   "name": "WSNotifier",
-  "version": "1.0.0",
-  "description": "Notification natif throught node-notifier. Fire on websocket event",
+  "version": "1.1.0",
+  "description": "Notification throught node-notifier. Fire on websocket event",
   "main": "main.js",
   "dependencies": {
+    "electron-updater": "^4.3.5",
     "node-notifier": "^7.0.0",
     "ws": "^7.2.3"
   },
@@ -16,9 +17,10 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "electron .",
     "pack": "electron-builder --dir",
-    "dist": "electron-builder"
+    "dist": "electron-builder",
+    "deploy": "electron-builder build  --win --publish always"
   },
-  "author": "FatOldSun00buiyar",
+  "author": "FatOldSun00",
   "license": "ISC",
   "build": {
     "asar": false,
@@ -26,8 +28,12 @@
     "mac": {
       "category": "supervision"
     },
-    "extraFiles": ["config.json"],
-    "files": ["**/*"],
+    "extraFiles": [
+      "config.json"
+    ],
+    "files": [
+      "**/*"
+    ],
     "nsis": {
       "installerIcon": "build/icon.ico",
       "createStartMenuShortcut": true

@@ -11,6 +11,7 @@ const wsCo = (() => {
     let refreshCB = false
     
     const heartbeart = ()=>{
+        clearInterval(heartbeartID)
         heartbeartID = setInterval(async() => {
             try {
                 if (WSisAlive == false && ws){
@@ -50,6 +51,7 @@ const wsCo = (() => {
             if (ws!= undefined) stop()
             let {name,server} = config.get()
 
+            if (!server) return false
             await new Promise((resolve,reject)=>{
                 try {
                     ws = new WebSocket(server);
@@ -92,9 +94,8 @@ const wsCo = (() => {
                 WSisAlive=true
             });
             refreshOnEventCB()
-        } catch(err) { } finally{
             heartbeart()
-        }
+        } catch(err) { heartbeart() }
     }
     
     const stop = ()=>{
@@ -112,7 +113,6 @@ const wsCo = (() => {
             
         }
         
-
         if (ws) ws.terminate()
         ws = undefined
         clearInterval(heartbeartID)
